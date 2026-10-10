@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>YouTube Focus</title>
+    <link rel="stylesheet" href="popup.css">
+    <script src="popup.js" defer></script>
+  </head>
+  <body>
+    <main class="panel">
+      <header class="header">
+        <img class="brand-icon" src="icons/icon-32.svg" alt="" width="32" height="32">
+        <div>
+          <h1>YouTube Focus</h1>
+          <p class="subtitle">A little more room to watch.</p>
+        </div>
+      </header>
+
+      <section class="settings" aria-labelledby="settings-title">
+        <h2 id="settings-title" class="section-label">YOUR LAYOUT</h2>
+        <label class="toggle-row" for="enabled">
+          <span class="control-copy">
+            <span class="control-title">Focus layout</span>
+            <span class="control-hint">Give the video and details more space</span>
+          </span>
+          <input id="enabled" type="checkbox" checked>
+        </label>
+
+        <label class="select-row" for="card-size">
+          <span class="control-copy">
+            <span class="control-title">Recommendation size</span>
+            <span class="control-hint">Choose how much detail cards show</span>
+          </span>
+          <select id="card-size" aria-label="Recommendation size">
+            <option value="compact">Compact</option>
+            <option value="comfortable" selected>Comfortable</option>
+            <option value="large">Large</option>
+          </select>
+        </label>
+      </section>
+
+      <section class="comments" aria-labelledby="comments-title">
+        <div class="comments-copy">
+          <h2 id="comments-title">Comments</h2>
+          <p>Hidden by default so the video stays in focus.</p>
+        </div>
+        <button id="open-comments" class="secondary-button" type="button">Open comments</button>
+      </section>
+
+      <p id="status" class="status" role="status" aria-live="polite">Loading your settings…</p>
+    </main>
+  </body>
+</html>

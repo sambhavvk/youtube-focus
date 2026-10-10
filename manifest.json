@@ -1,0 +1,39 @@
+{
+  "manifest_version": 3,
+  "name": "YouTube Focus",
+  "version": "1.2.1",
+  "description": "A calmer YouTube layout with the title and recommendations below the player and details beside it.",
+  "permissions": ["storage", "activeTab"],
+  "host_permissions": ["https://www.youtube.com/*"],
+  "icons": {
+    "16": "icons/icon-16.svg",
+    "32": "icons/icon-32.svg",
+    "48": "icons/icon-48.svg",
+    "128": "icons/icon-128.svg"
+  },
+  "action": {
+    "default_title": "YouTube Focus",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.svg",
+      "32": "icons/icon-32.svg"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.youtube.com/*"],
+      "js": ["content.js"],
+      "css": ["styles.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "youtube-focus@local.extension",
+      "strict_min_version": "142.0",
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
+    }
+  }
+}

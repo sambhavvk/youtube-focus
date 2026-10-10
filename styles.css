@@ -1,0 +1,357 @@
+/* All rules are scoped to an active watch page and disappear on disable. */
+ytd-watch-flexy.yf-active {
+  --yf-card-min: 280px;
+  --yf-details-width: clamp(300px, 25vw, 380px);
+  --yf-surface: var(--yt-spec-badge-chip-background, rgba(0, 0, 0, .05));
+  --yf-surface-hover: var(--yt-spec-button-chip-background-hover, rgba(0, 0, 0, .1));
+  --yf-text: var(--yt-spec-text-primary, #0f0f0f);
+  --yf-outline: var(--yt-spec-10-percent-layer, rgba(127, 127, 127, .25));
+}
+
+/* Newer YouTube layouts omit the legacy colour tokens. Follow the site's
+   selected theme rather than the browser/OS preference when those tokens are absent. */
+html[dark] ytd-watch-flexy.yf-active {
+  --yf-text: var(--yt-spec-text-primary, #f1f1f1);
+  --yf-surface: var(--yt-spec-badge-chip-background, rgba(255, 255, 255, .1));
+  --yf-surface-hover: var(--yt-spec-button-chip-background-hover, rgba(255, 255, 255, .2));
+}
+
+ytd-watch-flexy.yf-active[data-yf-card-size="compact"] { --yf-card-min: 220px; }
+ytd-watch-flexy.yf-active[data-yf-card-size="large"] { --yf-card-min: 360px; }
+
+ytd-watch-flexy.yf-active #columns {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) var(--yf-details-width);
+  gap: 28px 24px;
+  align-items: start;
+  width: calc(100% - 48px) !important;
+  max-width: 1720px !important;
+  min-width: 0 !important;
+  margin: 24px auto !important;
+  padding: 0 !important;
+  position: static !important;
+}
+
+ytd-watch-flexy.yf-active #primary {
+  grid-column: 1;
+  grid-row: 1;
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+ytd-watch-flexy.yf-active #primary-inner { width: 100% !important; min-width: 0 !important; }
+
+ytd-watch-flexy.yf-active #secondary {
+  display: block !important;
+  position: static !important;
+  grid-column: 2;
+  grid-row: 1;
+  width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  max-height: var(--yf-player-height, 75vh);
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+}
+
+ytd-watch-flexy.yf-active #secondary-inner { width: 100% !important; position: static !important; }
+
+/* The actual player stays in its native parent. Fullscreen/theatre sizing stays native. */
+ytd-watch-flexy.yf-active:not([theater]):not([fullscreen]) #player {
+  width: 100% !important;
+  max-width: none !important;
+}
+ytd-watch-flexy.yf-active:not([theater]):not([fullscreen]) #player-container-outer {
+  position: relative !important;
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  aspect-ratio: 16 / 9;
+}
+ytd-watch-flexy.yf-active:not([theater]):not([fullscreen]) #player-container-inner {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  padding: 0 !important;
+}
+ytd-watch-flexy.yf-active:not([theater]):not([fullscreen]) #player-container,
+ytd-watch-flexy.yf-active:not([theater]):not([fullscreen]) #movie_player {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+ytd-watch-flexy.yf-active #yf-details,
+ytd-watch-flexy.yf-active #yf-details #below,
+ytd-watch-flexy.yf-active #yf-details #above {
+  width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+ytd-watch-flexy.yf-active #yf-details ytd-watch-metadata { margin: 0 !important; }
+ytd-watch-flexy.yf-active #yf-details {
+  display: flex;
+  flex-direction: column;
+  max-height: var(--yf-player-height, 75vh);
+}
+ytd-watch-flexy.yf-active #yf-details :is(#below, #above) { flex: none; }
+/* Reserve space for the comment body even when the description is expanded. */
+ytd-watch-flexy.yf-active #yf-details:has(> #yf-comments-panel:not([hidden])) {
+  height: var(--yf-player-height, 75vh);
+}
+ytd-watch-flexy.yf-active #yf-details:has(> #yf-comments-panel:not([hidden])) > :is(#below, #above) {
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+}
+ytd-watch-flexy.yf-active #yf-details ytd-watch-metadata #top-row {
+  flex-wrap: wrap !important;
+  gap: 12px !important;
+  margin-block: 0 12px !important;
+}
+ytd-watch-flexy.yf-active #yf-details ytd-watch-metadata #owner {
+  width: 100% !important;
+  min-width: 0 !important;
+  margin-inline-end: 0 !important;
+  flex: 1 1 100% !important;
+}
+ytd-watch-flexy.yf-active #yf-details #actions {
+  width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  overflow: visible;
+}
+ytd-watch-flexy.yf-active #yf-details #actions :is(#actions-inner, #menu, ytd-menu-renderer) { min-width: 0 !important; }
+ytd-watch-flexy.yf-active #yf-details #actions ytd-menu-renderer { display: flex !important; flex-wrap: wrap !important; }
+ytd-watch-flexy.yf-active #yf-details #actions #top-level-buttons-computed { flex-wrap: wrap !important; gap: 8px; }
+ytd-watch-flexy.yf-active #yf-details #description {
+  min-width: 0 !important;
+  margin-block: 12px !important;
+}
+ytd-watch-flexy.yf-active #yf-details ytd-text-inline-expander[is-expanded] {
+  max-height: 360px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+ytd-watch-flexy.yf-active #yf-comments-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  width: 100%;
+  margin-block: 12px 0;
+  padding: 10px 16px;
+  border: 1px solid var(--yf-outline);
+  border-radius: 20px;
+  color: var(--yf-text);
+  background: var(--yf-surface);
+  font: 500 14px/1.4 Roboto, Arial, sans-serif;
+  cursor: pointer;
+  flex: none;
+}
+ytd-watch-flexy.yf-active #yf-comments-toggle:hover { background: var(--yf-surface-hover); }
+ytd-watch-flexy.yf-active #yf-comments-toggle:focus-visible,
+ytd-watch-flexy.yf-active #yf-comments-panel:focus-visible,
+ytd-watch-flexy.yf-active #yf-comments-panel > ytd-engagement-panel-section-list-renderer > #content:focus-visible {
+  outline: 2px solid var(--yt-spec-call-to-action, #065fd4);
+  outline-offset: 3px;
+}
+ytd-watch-flexy.yf-active #yf-comments-panel > ytd-engagement-panel-section-list-renderer > #content:focus-visible {
+  outline-offset: -2px;
+}
+ytd-watch-flexy.yf-active #yf-comments-panel {
+  max-height: min(600px, 65vh);
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior-y: contain;
+  scrollbar-width: thin;
+  margin-block-start: 12px;
+  padding: 0 4px 12px;
+  border-block-start: 1px solid var(--yf-outline);
+  flex: 1 1 0;
+  min-height: 160px;
+}
+ytd-watch-flexy.yf-active #yf-comments-panel:has(> ytd-engagement-panel-section-list-renderer) {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+ytd-watch-flexy.yf-active #yf-comments-panel[hidden],
+ytd-watch-flexy.yf-active #yf-recommendations[hidden],
+ytd-watch-flexy.yf-active .yf-comments-status[hidden] { display: none !important; }
+ytd-watch-flexy.yf-active ytd-comments:not(#yf-comments-panel ytd-comments) { display: none !important; }
+ytd-watch-flexy.yf-active #yf-comments-panel ytd-comments {
+  display: block !important;
+  flex: none !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  margin-block-start: 16px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+ytd-watch-flexy.yf-active #yf-comments-panel ytd-engagement-panel-section-list-renderer {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 1 0;
+  min-height: 0 !important;
+  width: 100% !important;
+  max-height: none !important;
+  height: auto !important;
+  margin: 0 !important;
+  border: 0 !important;
+  box-sizing: border-box !important;
+}
+ytd-watch-flexy.yf-active #yf-comments-panel ytd-engagement-panel-section-list-renderer > #content {
+  display: block !important;
+  flex: 1 1 0;
+  min-height: 0 !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  overscroll-behavior-y: contain;
+  scrollbar-width: thin;
+}
+/* Native nested lists must grow inside the one scrollable body. Their original
+   height/overflow rules can otherwise clip the thread or trap wheel events. */
+ytd-watch-flexy.yf-active #yf-comments-panel ytd-engagement-panel-section-list-renderer > #content > ytd-section-list-renderer,
+ytd-watch-flexy.yf-active #yf-comments-panel ytd-section-list-renderer > #contents,
+ytd-watch-flexy.yf-active #yf-comments-panel ytd-comments > ytd-item-section-renderer,
+ytd-watch-flexy.yf-active #yf-comments-panel ytd-comments > ytd-item-section-renderer > #contents {
+  display: block !important;
+  flex: none !important;
+  min-height: 0 !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  overscroll-behavior: auto;
+}
+ytd-watch-flexy.yf-active .yf-comments-status {
+  color: var(--yt-spec-text-secondary, #606060);
+  font: 400 14px/1.5 Roboto, Arial, sans-serif;
+  margin-block: 16px;
+}
+ytd-watch-flexy.yf-active #yf-comments-panel #header { flex-wrap: wrap !important; }
+ytd-watch-flexy.yf-active #yf-comments-panel #simplebox-placeholder { min-width: 0 !important; }
+
+/* The video name sits in the player column, directly below the player. */
+ytd-watch-flexy.yf-active #yf-title {
+  grid-column: 1;
+  grid-row: 2;
+  min-width: 0;
+}
+ytd-watch-flexy.yf-active #yf-title:empty { display: none; }
+ytd-watch-flexy.yf-active #yf-title :is(#title, h1) { margin: 0 !important; padding: 0 !important; }
+ytd-watch-flexy.yf-active #yf-title h1 {
+  color: var(--yf-text);
+  font-family: Roboto, Arial, sans-serif;
+  font-size: clamp(20px, 1.5vw, 24px);
+  font-weight: 700;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+/* The recommendation grid sits below the title, without a visible heading. */
+ytd-watch-flexy.yf-active #yf-recommendations {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  min-width: 0;
+}
+ytd-watch-flexy.yf-active #yf-recommendations #related { width: 100% !important; margin: 0 !important; }
+ytd-watch-flexy.yf-active #yf-recommendations [data-yf-grid] {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--yf-card-min)), 1fr));
+  gap: 24px 20px;
+  align-items: start;
+  width: 100% !important;
+}
+ytd-watch-flexy.yf-active #yf-recommendations [data-yf-grid] > [data-yf-wide] { grid-column: 1 / -1; }
+ytd-watch-flexy.yf-active #yf-recommendations [data-yf-grid] > :is(
+  ytd-compact-video-renderer, yt-lockup-view-model, ytd-video-renderer, ytd-rich-item-renderer
+) {
+  display: block !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+}
+ytd-watch-flexy.yf-active #yf-recommendations :is(ytd-compact-video-renderer, ytd-video-renderer) #dismissible {
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+}
+ytd-watch-flexy.yf-active #yf-recommendations :is(ytd-compact-video-renderer, ytd-video-renderer) ytd-thumbnail {
+  width: 100% !important;
+  flex: none !important;
+  margin: 0 0 10px !important;
+  aspect-ratio: 16 / 9;
+}
+ytd-watch-flexy.yf-active #yf-recommendations ytd-thumbnail #thumbnail {
+  border-radius: 12px !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+ytd-watch-flexy.yf-active #yf-recommendations :is(ytd-compact-video-renderer, ytd-video-renderer) :is(#details, .details) {
+  min-width: 0 !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+ytd-watch-flexy.yf-active #yf-recommendations :is(ytd-compact-video-renderer, ytd-video-renderer) #video-title {
+  font-size: 16px !important;
+  line-height: 1.4 !important;
+  max-height: 2.8em !important;
+  -webkit-line-clamp: 2 !important;
+}
+ytd-watch-flexy.yf-active #yf-recommendations :is(.yt-lockup-view-model, .ytLockupViewModelHost) {
+  width: 100% !important;
+  min-width: 0 !important;
+  flex-direction: column !important;
+}
+ytd-watch-flexy.yf-active #yf-recommendations :is(.yt-lockup-view-model__content-image, .ytLockupViewModelContentImage) {
+  width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 0 10px !important;
+  flex: none !important;
+  box-sizing: border-box !important;
+}
+ytd-watch-flexy.yf-active #yf-recommendations :is(.yt-lockup-view-model__metadata, .ytLockupViewModelMetadata) {
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+/* In theatre mode the native full-width player is above these columns. */
+ytd-watch-flexy.yf-active[theater] #primary { display: none !important; }
+ytd-watch-flexy.yf-active[theater] #yf-title { grid-column: 1; grid-row: 1; }
+ytd-watch-flexy.yf-active[theater] #yf-recommendations { grid-column: 1; grid-row: 2; }
+/* Let the sidebar span both rows: it flows alongside the grid instead of
+   stretching the title's row and pushing the grid down. */
+ytd-watch-flexy.yf-active[theater] #secondary { grid-row: 1 / span 2; }
+
+@media (max-width: 980px) {
+  ytd-watch-flexy.yf-active #columns { grid-template-columns: minmax(0, 1fr); }
+  ytd-watch-flexy.yf-active #yf-title { grid-column: 1; grid-row: 2; }
+  ytd-watch-flexy.yf-active #secondary { grid-column: 1; grid-row: 3; max-height: none; overflow: visible; }
+  ytd-watch-flexy.yf-active #yf-details { max-height: none; }
+  ytd-watch-flexy.yf-active #yf-details:has(> #yf-comments-panel:not([hidden])) { height: auto; }
+  ytd-watch-flexy.yf-active #yf-details:has(> #yf-comments-panel:not([hidden])) > :is(#below, #above) { flex: none; overflow: visible; }
+  ytd-watch-flexy.yf-active #yf-comments-panel { flex: none; height: min(600px, 65vh); }
+  ytd-watch-flexy.yf-active #yf-recommendations { grid-column: 1; grid-row: 4; }
+  ytd-watch-flexy.yf-active[theater] #yf-title { grid-row: 1; }
+  ytd-watch-flexy.yf-active[theater] #secondary { grid-row: 2; }
+  ytd-watch-flexy.yf-active[theater] #yf-recommendations { grid-row: 3; }
+}
+@media (max-width: 600px) {
+  ytd-watch-flexy.yf-active #columns { width: calc(100% - 24px) !important; margin-block: 12px !important; gap: 20px; }
+}

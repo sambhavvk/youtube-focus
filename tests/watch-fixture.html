@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fixture Video — YouTube</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --yt-spec-base-background: #0f0f0f;
+      --yt-spec-raised-background: #212121;
+      --yt-spec-text-primary: #f1f1f1;
+      --yt-spec-text-secondary: #aaa;
+      --yt-spec-call-to-action: #3ea6ff;
+      --yt-spec-10-percent-layer: #ffffff1a;
+      font: 16px Arial, sans-serif;
+      background: var(--yt-spec-base-background);
+      color: var(--yt-spec-text-primary);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--yt-spec-base-background); }
+    a { color: inherit; text-decoration: none; }
+    button, input { color: inherit; font: inherit; }
+    button { cursor: pointer; }
+    #masthead-container {
+      position: sticky; top: 0; z-index: 5; height: 64px; display: flex; align-items: center;
+      gap: 30px; padding: 0 28px; background: #0f0f0fee; border-bottom: 1px solid #ffffff14;
+    }
+    .logo { font-weight: 700; letter-spacing: -.6px; }
+    .logo b { display: inline-grid; place-items: center; width: 31px; height: 22px; margin-right: 6px;
+      border-radius: 7px; background: #f00; color: white; font-size: 13px; }
+    .search { width: min(560px, 52vw); height: 40px; padding: 0 16px; border: 1px solid #303030;
+      border-radius: 22px; background: #121212; color: #eee; }
+    #fixture-root { width: min(1680px, 100%); margin: 0 auto; padding: 24px 30px 80px; }
+    #columns { display: grid; grid-template-columns: minmax(0, 1fr) 410px; gap: 24px; align-items: start; }
+    #primary, #secondary { min-width: 0; }
+    #player-container-outer { width: 100%; }
+    #player-container-inner { width: 100%; }
+    #player-container { width: 100%; aspect-ratio: 16 / 9; overflow: hidden; background: #080808; }
+    #movie_player { position: relative; width: 100%; height: 100%; background: #080808; }
+    #movie_player video { width: 100%; height: 100%; display: block; background: linear-gradient(140deg, #171d22, #080808 65%); }
+    .player-controls { position: absolute; inset: auto 0 0; display: flex; align-items: center; gap: 14px;
+      padding: 24px 18px 12px; color: white; background: linear-gradient(transparent, #000c); font-size: 14px; }
+    .play { font-size: 21px; }
+    .progress { height: 3px; flex: 1; background: #ffffff70; }
+    #below { padding-top: 18px; }
+    ytd-watch-metadata { display: block; }
+    #title h1 { margin: 0 0 16px; font-size: 21px; line-height: 1.4; font-weight: 700; }
+    #top-row { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+    #owner { display: flex; align-items: center; gap: 12px; min-width: max-content; }
+    .avatar { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 50%; background: #385b76; font-weight: 700; }
+    #channel-name { font-weight: 700; }
+    #subscriber-count { margin-top: 4px; color: var(--yt-spec-text-secondary); font-size: 13px; }
+    #subscribe-fixture { border: 0; border-radius: 20px; padding: 10px 16px; color: #0f0f0f; background: #f1f1f1; font-weight: 700; }
+    #actions { display: flex; gap: 8px; align-items: center; }
+    #actions button { min-height: 38px; border: 0; border-radius: 20px; padding: 0 15px; background: #ffffff1a; font-size: 14px; }
+    #actions button:hover, .native-menu-panel button:hover { background: #ffffff2b; }
+    #native-menu-wrap { position: relative; }
+    #native-menu { width: 40px; padding: 0 !important; font-size: 20px !important; }
+    .native-menu-panel { position: absolute; right: 0; top: 44px; z-index: 4; width: 190px; padding: 7px;
+      border-radius: 12px; background: #282828; box-shadow: 0 6px 24px #0009; }
+    .native-menu-panel[hidden] { display: none; }
+    .native-menu-panel button { width: 100%; border: 0; border-radius: 7px; padding: 10px; text-align: left; background: transparent; font-size: 14px; }
+    #description { margin-top: 16px; padding: 13px 16px; border-radius: 12px; background: #ffffff1a; font-size: 14px; line-height: 1.55; }
+    #description a { color: var(--yt-spec-call-to-action); }
+    #description p { margin: 0 0 8px; }
+    #description p:last-child { margin-bottom: 0; }
+    #comments { display: block; margin-top: 28px; }
+    #comments h2 { margin: 0 0 20px; font-size: 20px; }
+    .comment-input { display: flex; gap: 12px; margin: 18px 0 22px; }
+    .comment-input input { flex: 1; border: 0; border-bottom: 1px solid #555; padding: 8px 0; background: transparent; }
+    .comment { display: flex; gap: 14px; margin: 22px 0; font-size: 14px; line-height: 1.5; }
+    .comment p { margin: 5px 0; }
+    .comment .avatar { width: 38px; height: 38px; flex: none; font-size: 13px; }
+    ytd-engagement-panel-section-list-renderer { display: flex; flex-direction: column; height: 400px; overflow: hidden; }
+    ytd-engagement-panel-section-list-renderer > #header { flex: none; min-height: 52px; display: flex; align-items: center; padding: 0 14px; border-bottom: 1px solid #ffffff1c; }
+    ytd-engagement-panel-title-header-renderer { display: flex; align-items: center; justify-content: space-between; width: 100%; font-weight: 700; }
+    ytd-engagement-panel-title-header-renderer #visibility-button { border: 0; background: transparent; font-size: 20px; }
+    ytd-engagement-panel-section-list-renderer > #content { flex: 1 1 auto; min-height: 0; overflow: hidden; }
+    ytd-section-list-renderer { display: flex; flex-direction: column; min-height: 0; height: 100%; overflow: hidden; }
+    ytd-section-list-renderer > #contents { flex: 1 1 auto; min-height: 0; overflow: auto; overscroll-behavior: contain; }
+    ytd-comments[engagement-panel] { display: flex; flex-direction: column; height: 400px; overflow: hidden; }
+    ytd-comments[engagement-panel] > ytd-item-section-renderer#sections { display: flex; flex: 1 1 auto; flex-direction: column; min-height: 0; overflow: hidden; }
+    ytd-comments[engagement-panel] > ytd-item-section-renderer#sections > #contents { flex: 1 1 auto; min-height: 0; overflow: auto; overscroll-behavior: contain; }
+    #items { display: grid; gap: 14px; }
+    ytd-compact-video-renderer #dismissible { display: flex; align-items: flex-start; gap: 10px; min-height: 94px; }
+    ytd-thumbnail { display: block; flex: 0 0 168px; width: 168px; }
+    #thumbnail { position: relative; display: block; width: 168px; height: 94px; overflow: hidden; border-radius: 9px; background: #283444; }
+    #thumbnail img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .duration { position: absolute; bottom: 4px; right: 4px; padding: 2px 4px; border-radius: 3px; background: #000c; font-size: 12px; }
+    #details { min-width: 0; }
+    #video-title { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; font-size: 14px; line-height: 1.35; font-weight: 600; }
+    .byline, .metadata-line { display: block; margin-top: 5px; color: var(--yt-spec-text-secondary); font-size: 12px; line-height: 1.35; }
+    .yt-lockup-view-model { display: flex; flex-direction: row; align-items: flex-start; gap: 10px; }
+    .yt-lockup-view-model__content-image { width: 168px; height: 94px; overflow: hidden; border-radius: 9px; background: #374d36; }
+    .yt-lockup-view-model__content-image svg { display: block; width: 100%; height: 100%; }
+    .yt-lockup-view-model__metadata { min-width: 0; }
+    .yt-lockup-view-model__title { font-size: 14px; font-weight: 600; line-height: 1.35; }
+    .ytLockupViewModelHost.ytLockupViewModelHorizontal { display: flex; flex-direction: row; align-items: flex-start; gap: 10px; }
+    .ytLockupViewModelContentImage { width: 168px; height: 94px; overflow: hidden; border-radius: 9px; }
+    .ytLockupViewModelContentImage svg { display: block; width: 100%; height: 100%; }
+    .ytLockupViewModelMetadata { min-width: 0; }
+    .ytLockupViewModelTitle { font-size: 14px; font-weight: 600; line-height: 1.35; }
+    ytd-engagement-panel-section-list-renderer[visibility='ENGAGEMENT_PANEL_VISIBILITY_HIDDEN'] { display: none; }
+    ytd-continuation-item-renderer { display: block; height: 28px; border-radius: 8px; background: linear-gradient(90deg, #ffffff0a, #ffffff18, #ffffff0a); }
+    ytd-reel-shelf-renderer { display: block; margin: 8px 0; padding: 12px; border: 1px solid #ffffff18; border-radius: 12px; }
+    ytd-reel-shelf-renderer h3 { margin: 0; font-size: 14px; }
+    .reel-cards { display: flex; gap: 8px; margin-top: 10px; }
+    .reel-cards span { flex: 1; height: 64px; border-radius: 7px; background: linear-gradient(135deg,#533b71,#b85d6b); }
+    @media (max-width: 1120px) {
+      #fixture-root { padding: 18px 20px 60px; }
+      #columns { grid-template-columns: minmax(0, 1fr) 340px; gap: 18px; }
+      ytd-thumbnail { flex-basis: 140px; width: 140px; }
+      #thumbnail, .yt-lockup-view-model__content-image, .ytLockupViewModelContentImage { width: 140px; height: 79px; }
+      #top-row { align-items: flex-start; flex-direction: column; }
+    }
+    @media (max-width: 980px) {
+      #columns { grid-template-columns: minmax(0, 1fr); }
+      #secondary { grid-column: 1; }
+    }
+  </style>
+</head>
+<body>
+  <header id="masthead-container">
+    <div class="logo"><b>▶</b>YouTube</div>
+    <input class="search" aria-label="Search" placeholder="Search">
+  </header>
+
+  <main id="fixture-root"></main>
+
+  <template id="watch-template">
+    <ytd-watch-flexy>
+      <div id="columns">
+        <div id="primary">
+          <div id="primary-inner">
+            <div id="player">
+              <div id="player-container-outer">
+                <div id="player-container-inner">
+                  <div id="player-container">
+                    <div id="movie_player">
+                      <video aria-label="Fixture video player" playsinline></video>
+                      <div class="player-controls" aria-label="Player controls"><span class="play">▶</span><span>0:42 / 8:16</span><span class="progress"></span><span>⚙</span><span>⛶</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div id="below">
+              <ytd-watch-metadata>
+                <div id="title"><h1>How to build a calmer, more focused workspace</h1></div>
+                <div id="top-row">
+                  <div id="owner">
+                    <div class="avatar" aria-hidden="true">F</div>
+                    <div><div id="channel-name">Field Notes Studio</div><div id="subscriber-count">284K subscribers</div></div>
+                    <button id="subscribe-fixture" type="button">Subscribe</button>
+                  </div>
+                  <div id="actions" aria-label="Video actions">
+                    <button type="button" aria-label="Like">👍 18K</button>
+                    <button type="button">↗ Share</button>
+                    <div id="native-menu-wrap">
+                      <button id="native-menu" type="button" aria-label="More actions" aria-expanded="false">⋯</button>
+                      <div class="native-menu-panel" hidden><button type="button">Save to playlist</button><button type="button">Report</button></div>
+                    </div>
+                  </div>
+                </div>
+                <div id="description">
+                  <p>128K views · 2 days ago · A practical guide to making space for the work that matters.</p>
+                  <p>Explore the full setup and reading list at <a href="https://example.invalid/notes">fieldnotes.example/notes</a>.</p>
+                </div>
+              </ytd-watch-metadata>
+              <ytd-comments id="comments">
+                <h2>Comments <span>1,284</span></h2>
+                <div class="comment-input"><div class="avatar" aria-hidden="true">Y</div><input id="comment-entry" placeholder="Add a comment…" aria-label="Add a comment"></div>
+                <div class="comment"><div class="avatar" aria-hidden="true">A</div><div><strong>Alex M. · 1 day ago</strong><p>The chapter about protecting your first hour made a real difference to my mornings. Thank you for keeping this practical.</p></div></div>
+                <div class="comment"><div class="avatar" aria-hidden="true">J</div><div><strong>Jamie · 18 hours ago</strong><p>Would love a follow-up on how you plan a week without overfilling it.</p></div></div>
+                <div class="comment"><div class="avatar" aria-hidden="true">R</div><div><strong>Rin · 12 hours ago</strong><p>That simple paper list beside the desk is such a good idea.</p></div></div>
+                <div class="comment"><div class="avatar" aria-hidden="true">S</div><div><strong>Sam · 3 hours ago</strong><p>Revisiting this after a busy month. The advice still holds up.</p></div></div>
+              </ytd-comments>
+            </div>
+          </div>
+        </div>
+        <div id="secondary">
+          <div id="secondary-inner">
+            <div id="related">
+            <ytd-watch-next-secondary-results-renderer>
+              <div id="items">
+                <ytd-compact-video-renderer>
+                  <div id="dismissible"><ytd-thumbnail>
+                    <a id="thumbnail" href="/watch?v=next01"><img alt="Mountain landscape thumbnail" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 336 188'%3E%3Crect width='336' height='188' fill='%2335485d'/%3E%3Cpath d='M0 160 100 54l65 72 62-88 109 122v28H0' fill='%2388a9ad'/%3E%3C/svg%3E"><span class="duration">12:04</span></a>
+                  </ytd-thumbnail>
+                  <div id="details"><a id="video-title" href="/watch?v=next01">A quiet weekend in the mountains</a><span class="byline">Northbound</span><span class="metadata-line">92K views · 1 week ago</span></div>
+                  </div>
+                </ytd-compact-video-renderer>
+                <ytd-compact-video-renderer>
+                  <div id="dismissible"><ytd-thumbnail>
+                    <a id="thumbnail" href="/watch?v=next02"><img alt="Desk with notebook thumbnail" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 336 188'%3E%3Crect width='336' height='188' fill='%236f6552'/%3E%3Crect x='86' y='26' width='170' height='138' rx='7' fill='%23e1d4b8'/%3E%3Cpath d='M108 64h126M108 86h126M108 108h92' stroke='%238a8172' stroke-width='5'/%3E%3C/svg%3E"><span class="duration">9:38</span></a>
+                  </ytd-thumbnail>
+                  <div id="details"><a id="video-title" href="/watch?v=next02">My simple weekly planning ritual</a><span class="byline">Mira Makes</span><span class="metadata-line">215K views · 3 days ago</span></div>
+                  </div>
+                </ytd-compact-video-renderer>
+                <ytd-compact-video-renderer>
+                  <div id="dismissible"><ytd-thumbnail>
+                    <a id="thumbnail" href="/watch?v=next03"><img alt="Sunlight through a window thumbnail" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 336 188'%3E%3Crect width='336' height='188' fill='%23bf8e62'/%3E%3Cpath d='M0 0h166v188H0z' fill='%23d8b990'/%3E%3Cpath d='M166 0h8v188h-8M0 91h166v8H0' fill='%237d604c'/%3E%3Ccircle cx='263' cy='50' r='31' fill='%23f5d27f'/%3E%3C/svg%3E"><span class="duration">15:21</span></a>
+                  </ytd-thumbnail>
+                  <div id="details"><a id="video-title" href="/watch?v=next03">Making time for slower mornings</a><span class="byline">Small Hours</span><span class="metadata-line">48K views · 5 days ago</span></div>
+                  </div>
+                </ytd-compact-video-renderer>
+                <ytd-compact-video-renderer>
+                  <div id="dismissible"><ytd-thumbnail>
+                    <a id="thumbnail" href="/watch?v=next04"><img alt="Abstract blue shapes thumbnail" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 336 188'%3E%3Crect width='336' height='188' fill='%232b5272'/%3E%3Ccircle cx='102' cy='106' r='74' fill='%237cb5bd'/%3E%3Ccircle cx='225' cy='63' r='64' fill='%23d7ad69'/%3E%3C/svg%3E"><span class="duration">7:52</span></a>
+                  </ytd-thumbnail>
+                  <div id="details"><a id="video-title" href="/watch?v=next04">A clean digital reset in 30 minutes</a><span class="byline">Good Systems</span><span class="metadata-line">431K views · 2 weeks ago</span></div>
+                  </div>
+                </ytd-compact-video-renderer>
+                <ytd-compact-video-renderer>
+                  <div id="dismissible"><ytd-thumbnail>
+                    <a id="thumbnail" href="/watch?v=next05"><img alt="Coastal path thumbnail" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 336 188'%3E%3Crect width='336' height='188' fill='%236fa7b3'/%3E%3Cpath d='M0 118q66-20 133 2t203-4v72H0' fill='%233b7582'/%3E%3Cpath d='M0 150q90-26 177 1t159-7v44H0' fill='%23294350'/%3E%3C/svg%3E"><span class="duration">21:09</span></a>
+                  </ytd-thumbnail>
+                  <div id="details"><a id="video-title" href="/watch?v=next05">Walking the coast with no itinerary</a><span class="byline">Northbound</span><span class="metadata-line">67K views · 6 days ago</span></div>
+                  </div>
+                </ytd-compact-video-renderer>
+                <ytd-compact-video-renderer>
+                  <div id="dismissible"><ytd-thumbnail>
+                    <a id="thumbnail" href="/watch?v=next06"><img alt="Coffee cup on a table thumbnail" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 336 188'%3E%3Crect width='336' height='188' fill='%238b6958'/%3E%3Crect y='123' width='336' height='65' fill='%23524038'/%3E%3Cpath d='M118 55h91v72q-45 35-91 0z' fill='%23eee2ce'/%3E%3Cpath d='M209 68q42-1 27 34h-28' fill='none' stroke='%23eee2ce' stroke-width='11'/%3E%3C/svg%3E"><span class="duration">11:46</span></a>
+                  </ytd-thumbnail>
+                  <div id="details"><a id="video-title" href="/watch?v=next06">The case for a proper lunch break</a><span class="byline">Everyday Practice</span><span class="metadata-line">103K views · 4 days ago</span></div>
+                  </div>
+                </ytd-compact-video-renderer>
+                <yt-lockup-view-model><div class="yt-lockup-view-model">
+                  <div class="yt-lockup-view-model__content-image" aria-hidden="true"><svg viewBox="0 0 336 188" xmlns="http://www.w3.org/2000/svg"><rect width="336" height="188" fill="#425a43"/><path d="M0 139 87 62l48 44 74-75 127 115v42H0" fill="#94ab7b"/><circle cx="262" cy="43" r="24" fill="#f4d78a"/></svg></div>
+                  <div class="yt-lockup-view-model__metadata"><div class="yt-lockup-view-model__title">Build a reading habit that lasts</div><span class="metadata-line">Better Every Day · 8:44</span></div>
+                </div></yt-lockup-view-model>
+                <yt-lockup-view-model class="ytLockupViewModelWrapper"><div class="ytLockupViewModelHost ytLockupViewModelHorizontal">
+                  <div class="ytLockupViewModelContentImage" aria-hidden="true"><svg viewBox="0 0 336 188" xmlns="http://www.w3.org/2000/svg"><rect width="336" height="188" fill="#604b72"/><circle cx="163" cy="84" r="60" fill="#d7b36d"/><path d="M0 153q70-47 142-14t194-15v64H0" fill="#293f43"/></svg></div>
+                  <div class="ytLockupViewModelMetadata"><div class="ytLockupViewModelTitle">A tiny home studio tour</div><span class="metadata-line">Room to Think · 10:12</span></div>
+                </div></yt-lockup-view-model>
+                <ytd-reel-shelf-renderer><h3>Shorts</h3><div class="reel-cards"><span></span><span></span><span></span></div></ytd-reel-shelf-renderer>
+                <ytd-continuation-item-renderer aria-label="More recommendations loading"></ytd-continuation-item-renderer>
+              </div>
+            </ytd-watch-next-secondary-results-renderer>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ytd-watch-flexy>
+  </template>
+
+  <script>
+    (() => {
+      const root = document.getElementById('fixture-root');
+      const template = document.getElementById('watch-template');
+      window.nativeMenuClicks = 0;
+
+      function installMenuHandler(watch) {
+        const menuButton = watch.querySelector('#native-menu');
+        const menu = watch.querySelector('.native-menu-panel');
+        menuButton.addEventListener('click', () => {
+          window.nativeMenuClicks += 1;
+          menu.hidden = !menu.hidden;
+          menuButton.setAttribute('aria-expanded', String(!menu.hidden));
+        });
+      }
+
+      function buildWatch() {
+        const watch = template.content.firstElementChild.cloneNode(true);
+        root.replaceChildren(watch);
+        const commentList = watch.querySelector('#comments');
+        const commentSeed = commentList?.querySelector('.comment');
+        if (commentSeed) {
+          for (let index = 0; index < 18; index += 1) {
+            const extra = commentSeed.cloneNode(true);
+            extra.querySelector('strong').textContent = `Viewer ${index + 1} · a moment ago`;
+            extra.querySelector('p').textContent = `Additional fixture comment ${index + 1}. This text gives the comments list enough content to exercise scrolling without network requests.`;
+            extra.querySelector('.avatar').textContent = String((index + 1) % 10);
+            commentList.append(extra);
+          }
+        }
+        window.originalPlayer = watch.querySelector('#movie_player');
+        installMenuHandler(watch);
+        return watch;
+      }
+
+      function useEngagementComments() {
+        const watch = root.querySelector('ytd-watch-flexy');
+        const realComments = watch.querySelector('#below ytd-comments#comments');
+        if (!watch || !realComments) return false;
+
+        const stub = document.createElement('ytd-comments');
+        stub.id = 'comments';
+        stub.setAttribute('disable-upgrade', '');
+        stub.hidden = true;
+        realComments.parentNode.replaceChild(stub, realComments);
+
+        const panelList = document.createElement('ytd-engagement-panel-section-list-renderer');
+        panelList.setAttribute('target-id', 'engagement-panel-comments-section');
+        panelList.setAttribute('visibility', 'ENGAGEMENT_PANEL_VISIBILITY_HIDDEN');
+        const panelHeader = document.createElement('div');
+        panelHeader.id = 'header';
+        const titleHeader = document.createElement('ytd-engagement-panel-title-header-renderer');
+        titleHeader.append(document.createTextNode('Comments'));
+        const closeButton = document.createElement('button');
+        closeButton.id = 'visibility-button';
+        closeButton.type = 'button';
+        closeButton.setAttribute('aria-label', 'Close comments');
+        closeButton.textContent = '×';
+        titleHeader.append(closeButton);
+        panelHeader.append(titleHeader);
+
+        const panelContent = document.createElement('div');
+        panelContent.id = 'content';
+        const sectionList = document.createElement('ytd-section-list-renderer');
+        const sectionContents = document.createElement('div');
+        sectionContents.id = 'contents';
+        const nativeComments = document.createElement('div');
+        nativeComments.id = 'engagement-panel-comments-section';
+        nativeComments.setAttribute('slot', 'content');
+        const commentSections = document.createElement('ytd-item-section-renderer');
+        commentSections.id = 'sections';
+        const commentContents = document.createElement('div');
+        commentContents.id = 'contents';
+        for (const child of [...realComments.children]) commentContents.append(child);
+        commentSections.append(commentContents);
+        realComments.setAttribute('engagement-panel', '');
+        realComments.append(commentSections);
+        nativeComments.append(realComments);
+        sectionContents.append(nativeComments);
+        sectionList.append(sectionContents);
+        panelContent.append(sectionList);
+        panelList.append(panelHeader, panelContent);
+        watch.querySelector('#secondary-inner').append(panelList);
+        window.realEngagementComments = realComments;
+        window.commentsPanel = panelList;
+        return true;
+      }
+
+      buildWatch();
+      window.replaceWatch = buildWatch;
+      window.useEngagementComments = useEngagementComments;
+    })();
+  </script>
+</body>
+</html>
