@@ -1,12 +1,17 @@
 {
   "name": "youtube-focus",
-  "version": "1.2.1",
-  "description": "Zen/Firefox extension that puts the YouTube title and recommendation grid below the player with optional comments.",
+  "version": "1.4.0",
+  "description": "Firefox/Zen and Chromium extension that puts the YouTube title and recommendation grid below the player with optional comments.",
   "scripts": {
     "test": "node tests/browser.mjs",
-    "lint": "npm run build && addons-linter artifacts/youtube-focus-1.2.1.zip --warnings-as-errors",
+    "test:chromium": "YF_BROWSER=chromium node tests/browser.mjs",
+    "test:packages": "npm run build && node --test tests/packages.mjs",
+    "lint": "npm run build:firefox && addons-linter artifacts/youtube-focus-1.4.0.zip --warnings-as-errors",
     "build": "node scripts/build.mjs",
-    "test:live": "npm run build && node tests/live.mjs"
+    "build:firefox": "node scripts/build.mjs firefox",
+    "build:chromium": "node scripts/build.mjs chromium",
+    "test:live": "npm run build:firefox && node tests/live.mjs",
+    "test:live:chromium": "npm run build:chromium && YF_BROWSER=chromium node tests/live.mjs"
   },
   "keywords": [],
   "type": "commonjs",

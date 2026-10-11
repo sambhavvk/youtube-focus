@@ -336,6 +336,25 @@
       buildWatch();
       window.replaceWatch = buildWatch;
       window.useEngagementComments = useEngagementComments;
+      // Model YouTube's viewport-triggered continuation without making network requests.
+      window.enableCommentContinuation = () => {
+        const list = root.querySelector('#yf-comments-panel ytd-comments');
+        const seed = list.querySelector('.comment');
+        const sentinel = document.createElement('ytd-continuation-item-renderer');
+        sentinel.id = 'fixture-comment-continuation';
+        list.append(sentinel);
+        const observer = new IntersectionObserver(entries => {
+          if (!entries.some(entry => entry.isIntersecting)) return;
+          for (let index = 0; index < 3; index += 1) {
+            const comment = seed.cloneNode(true);
+            comment.querySelector('strong').textContent = `Continuation viewer ${index + 1}`;
+            sentinel.before(comment);
+          }
+          observer.disconnect();
+          sentinel.remove();
+        });
+        observer.observe(sentinel);
+      };
     })();
   </script>
 </body>

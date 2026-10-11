@@ -1,6 +1,7 @@
 (() => {
   "use strict";
 
+  const extension = globalThis.browser || globalThis.chrome;
   const STORAGE_KEY = "youtubeFocusSettings";
   const DEFAULTS = { enabled: true, cardSize: "comfortable" };
   const CARD_SELECTOR = "ytd-compact-video-renderer, yt-lockup-view-model, ytd-video-renderer, ytd-rich-item-renderer";
@@ -78,6 +79,12 @@
     state.recommendations.id = "yf-recommendations";
     state.recommendations.setAttribute("aria-label", "Recommended videos");
     state.recommendations.hidden = true;
+    // This wrapper is display:contents while comments are closed. The primary
+    // joins it only while open, so a growing sidebar cannot resize the left flow.
+    state.main = document.createElement("div");
+    state.main.id = "yf-main";
+    primary.after(state.main);
+    state.main.append(state.title, state.recommendations);
 
     state.toggle = document.createElement("button");
     state.toggle.id = "yf-comments-toggle";
@@ -108,8 +115,6 @@
     }, true);
     state.details.append(state.toggle, state.commentsPanel);
     (secondary.querySelector("#secondary-inner") || secondary).prepend(state.details);
-    primary.after(state.title);
-    columns.append(state.recommendations);
 
     state.structureObserver = new MutationObserver(schedule);
     state.structureObserver.observe(watch, { childList: true, subtree: true });
@@ -137,7 +142,7 @@
     state.modeObserver.disconnect();
     state.resizeObserver.disconnect();
     state.commentsObserver.disconnect();
-    state.watch.classList.remove("yf-active");
+    state.watch.classList.remove("yf-active", "yf-comments-open");
     delete state.watch.dataset.yfCardSize;
     state.watch.style.removeProperty("--yf-player-height");
     // Reverse order restores children before their original containing blocks.
@@ -170,6 +175,7 @@
     state.details.remove();
     state.title.remove();
     state.recommendations.remove();
+    state.main.remove();
     notifyResize();
   }
 
@@ -203,6 +209,12 @@
   function setComments(open, focus = false) {
     if (!layout) return false;
     layout.commentsOpen = open;
+    if (open) {
+      moveNative(layout, layout.primary, layout.main, layout.title);
+    } else if (layout.primary.parentNode === layout.main) {
+      layout.main.before(layout.primary);
+    }
+    layout.watch.classList.toggle("yf-comments-open", open);
     layout.commentsPanel.hidden = !open;
     layout.toggle.setAttribute("aria-expanded", String(open));
     layout.toggle.textContent = open ? "Close comments" : "Open comments";
@@ -227,7 +239,7 @@
     }
     const watch = document.querySelector("ytd-watch-flexy:not([hidden])");
     if (layout && (layout.watch !== watch || !layout.columns.isConnected ||
-        !layout.details.isConnected || !layout.title.isConnected ||
+        !layout.details.isConnected || !layout.main.isConnected || !layout.title.isConnected ||
         !layout.recommendations.isConnected)) teardown();
     if (!watch) return;
     if (!layout) layout = createLayout(watch);
@@ -326,24 +338,28 @@
     }
   });
 
-  browser.storage.onChanged.addListener((changes, area) => {
+  extension.storage.onChanged.addListener((changes, area) => {
     if (area === "local" && changes[STORAGE_KEY]) {
       settings = normalizeSettings(changes[STORAGE_KEY].newValue);
       schedule();
     }
   });
-  browser.runtime.onMessage.addListener(message => {
+  // Synchronous sendResponse works in both browsers, including Chromium versions
+  // whose message listeners do not support returning a Promise.
+  extension.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message?.type === "youtube-focus:get-status") {
-      return Promise.resolve({ active: Boolean(layout), commentsOpen: layout?.commentsOpen || false });
+      sendResponse({ active: Boolean(layout), commentsOpen: layout?.commentsOpen || false });
     }
     if (message?.type === "youtube-focus:open-comments") {
-      if (!layout) return Promise.resolve({ ok: false, message: "Enable the focus layout on a loaded YouTube video first." });
+      if (!layout) {
+        sendResponse({ ok: false, message: "Enable the focus layout on a loaded YouTube video first." });
+        return;
+      }
       setComments(true, true);
-      return Promise.resolve({ ok: true });
+      sendResponse({ ok: true });
     }
-    return undefined;
   });
-  browser.storage.local.get(STORAGE_KEY).then(stored => {
+  extension.storage.local.get(STORAGE_KEY).then(stored => {
     settings = normalizeSettings(stored[STORAGE_KEY]);
   }).catch(error => {
     console.warn("YouTube Focus could not read settings; using defaults.", error);
