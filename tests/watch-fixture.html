@@ -327,7 +327,10 @@
         sectionList.append(sectionContents);
         panelContent.append(sectionList);
         panelList.append(panelHeader, panelContent);
-        watch.querySelector('#secondary-inner').append(panelList);
+        const panels = document.createElement('div');
+        panels.id = 'panels';
+        panels.append(panelList);
+        watch.querySelector('#secondary-inner').append(panels);
         window.realEngagementComments = realComments;
         window.commentsPanel = panelList;
         return true;
@@ -336,6 +339,38 @@
       buildWatch();
       window.replaceWatch = buildWatch;
       window.useEngagementComments = useEngagementComments;
+      // YouTube can stamp a replacement into its native slot after navigation
+      // finishes. A renderer moved elsewhere is not part of that slot's update.
+      window.startCommentsNavigation = (videoId, { engagement = true, disabled = false, events = true } = {}) => {
+        const watch = root.querySelector('ytd-watch-flexy');
+        const source = engagement
+          ? watch.querySelector('[target-id="engagement-panel-comments-section"]')
+          : watch.querySelector('ytd-comments:not([disable-upgrade])');
+        const next = source.cloneNode(true);
+        next.setAttribute('visibility', 'ENGAGEMENT_PANEL_VISIBILITY_HIDDEN');
+        for (const body of next.querySelectorAll('[role="region"]')) {
+          for (const name of ['tabindex', 'role', 'aria-label']) body.removeAttribute(name);
+        }
+        next.dataset.fixtureVideo = videoId;
+        for (const comment of next.querySelectorAll('.comment')) {
+          comment.querySelector('p').textContent = `A comment for video ${videoId}, not the previous video.`;
+        }
+        if (disabled) {
+          const comments = next.matches('ytd-comments') ? next : next.querySelector('ytd-comments');
+          comments.replaceChildren(Object.assign(document.createElement('ytd-message-renderer'), { textContent: `Comments are disabled for ${videoId}.` }));
+        }
+        if (events) document.dispatchEvent(new Event('yt-navigate-start'));
+        history.pushState({}, '', `/watch?v=${videoId}`);
+        watch.setAttribute('video-id', videoId);
+        watch.querySelector('ytd-watch-metadata h1')?.replaceChildren(`Fixture video ${videoId}`);
+        if (events) document.dispatchEvent(new Event('yt-navigate-finish'));
+        window.previousFixtureComments = source;
+        window.completeCommentsNavigation = () => {
+          if (engagement) watch.querySelector('#panels').replaceChildren(next);
+          else watch.querySelector('#below').append(next);
+          document.dispatchEvent(new Event('yt-page-data-updated'));
+        };
+      };
       // Model YouTube's viewport-triggered continuation without making network requests.
       window.enableCommentContinuation = () => {
         const list = root.querySelector('#yf-comments-panel ytd-comments');

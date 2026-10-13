@@ -174,12 +174,28 @@ try {
   await driver.manage().window().setRect({ width: 1640, height: 1100 });
   pass("actual watch page fits a narrow window without horizontal overflow");
 
+  await driver.findElement(By.id("yf-comments-toggle")).click();
+  await until("return !!document.querySelector('#yf-comments-panel #content-text')?.textContent.trim()", "Previous video's comments did not render before navigation");
+  const readFirstComment = () => js("return document.querySelector('#yf-comments-panel #content-text')?.textContent.trim() || document.querySelector('#yf-comments-panel ytd-message-renderer')?.textContent.trim() || ''");
+  const previousComment = await readFirstComment();
+  await js("window.previousCommentsRenderer=document.querySelector('#yf-comments-panel > ytd-engagement-panel-section-list-renderer')");
   const previousVideo = await js("return new URLSearchParams(location.search).get('v')");
   await driver.findElement(By.css("#yf-recommendations yt-lockup-view-model a[href^='/watch']")).click();
   await driver.wait(async () => (await js("return new URLSearchParams(location.search).get('v')")) !== previousVideo, 15000, "Recommendation click did not navigate", 150);
   await until("return !!document.querySelector('.yf-active #yf-details ytd-watch-metadata')", "Focus layout did not follow native navigation", 25000);
+  // Native navigation can replace the controls again while its columns settle.
+  // Locate/click the toggle only after that transition, not a transient button.
+  await waitForLayoutEnd();
   assert.equal(await js("return document.getElementById('yf-comments-panel').hidden"), true);
   pass("clicking a real recommendation navigates and reapplies the layout with comments closed");
+  await driver.findElement(By.id("yf-comments-toggle")).click();
+  await driver.wait(async () => {
+    const comment = await readFirstComment();
+    return comment !== '' && comment !== previousComment;
+  }, 25000, "The new video kept the previous video's comments", 150);
+  assert.equal(await js("return document.querySelectorAll('ytd-watch-flexy [target-id=engagement-panel-comments-section]').length"), 1);
+  const currentComment = await readFirstComment();
+  pass("reopening comments after a real recommendation displays the new video's thread");
 
   await driver.switchTo().newWindow("tab");
   await driver.get(popupUrl);
@@ -193,6 +209,15 @@ try {
   assert.ok(await js("return getComputedStyle(document.querySelector('#secondary #related')).display !== 'none'"));
   assert.ok(await js("return !!document.querySelector('#secondary [target-id=engagement-panel-comments-section] ytd-comments')"));
   pass("real popup restores the original YouTube layout, title and related videos");
+  const popupTab = (await driver.getAllWindowHandles()).find(handle => handle !== videoTab);
+  await driver.switchTo().window(popupTab);
+  await driver.findElement(By.id("enabled")).click();
+  await driver.switchTo().window(videoTab);
+  await until("return !!document.querySelector('#yf-comments-toggle')", "Re-enabling the layout after navigation failed");
+  await driver.findElement(By.id("yf-comments-toggle")).click();
+  await driver.wait(async () => (await readFirstComment()) === currentComment, 15000, "Re-enabling resurrected comments from the previous video", 150);
+  assert.equal(await js("return document.querySelectorAll('ytd-watch-flexy [target-id=engagement-panel-comments-section]').length"), 1);
+  pass("disable/re-enable after real navigation keeps only the current video's comments");
   console.log(`${passed} live checks passed in ${browserType} ${(await driver.getCapabilities()).get("browserVersion")}.`);
 } catch (error) {
   await writeFile(resolve(artifactDirectory, "live-failure.png"), await driver.takeScreenshot(), "base64").catch(() => {});

@@ -231,6 +231,26 @@
     return true;
   }
 
+  function setCommentsSource(state, source) {
+    if (state.commentsSource === source) return;
+    state.commentsObserver.disconnect();
+    const previous = state.commentsSource;
+    if (previous) {
+      // YouTube has replaced this renderer in its native slot. Do not restore
+      // the retained copy on disable, or let it win a future selector again.
+      const record = state.moves.get(previous);
+      record?.anchor.remove();
+      state.moves.delete(previous);
+      state.nativeVisibility.delete(previous);
+      for (const body of state.nativeBodyAttributes.keys()) {
+        if (previous.contains(body)) state.nativeBodyAttributes.delete(body);
+      }
+      previous.remove();
+    }
+    state.commentsSource = source;
+    state.commentsHost = null;
+  }
+
   function reconcile() {
     pending = null;
     if (!ready || !settings.enabled || navigating || !watchPage()) {
@@ -280,8 +300,19 @@
     }
     // Current watch layouts keep an empty disabled #comments placeholder and
     // render the usable comments component in an engagement panel instead.
-    const nativeCommentsPanel = watch.querySelector("ytd-engagement-panel-section-list-renderer[target-id='engagement-panel-comments-section']");
+    const previous = state.commentsSource;
+    const original = previous && state.moves.get(previous);
+    // A native slot update may remove the anchor without touching the renderer
+    // we relocated. That renderer is no longer owned by the current page data.
+    if (previous && (!previous.isConnected || (original && !original.anchor.isConnected))) {
+      setCommentsSource(state, null);
+    }
+    const panels = [...watch.querySelectorAll("ytd-engagement-panel-section-list-renderer[target-id='engagement-panel-comments-section']")];
+    // Native replacements must take priority over the copy already in our box.
+    const nativeCommentsPanel = panels.find(panel => !state.commentsPanel.contains(panel)) ||
+      panels.find(panel => panel === state.commentsSource);
     if (nativeCommentsPanel) {
+      setCommentsSource(state, nativeCommentsPanel);
       state.commentsPanel.tabIndex = -1;
       // Keep the panel header, sorting controls and comments together. Its native
       // visibility attribute triggers YouTube's on-demand comments loading.
@@ -309,10 +340,17 @@
       state.commentsPanel.tabIndex = 0;
       state.commentsHost = null;
       state.commentsObserver.disconnect();
+      const candidates = [...watch.querySelectorAll("ytd-comments:not([disable-upgrade])")];
+      const comments = candidates.find(node => !node.hidden && !state.commentsPanel.contains(node)) ||
+        candidates.find(node => !state.commentsPanel.contains(node)) ||
+        candidates.find(node => node === state.commentsSource);
+      if (comments) {
+        setCommentsSource(state, comments);
+        moveNative(state, comments, state.commentsPanel);
+      }
     }
-    const comments = watch.querySelector("ytd-comments:not([disable-upgrade]):not([hidden])") ||
-      watch.querySelector("ytd-comments:not([disable-upgrade])");
-    if (comments && !nativeCommentsPanel) moveNative(state, comments, state.commentsPanel);
+    const comments = nativeCommentsPanel?.querySelector("ytd-comments:not([disable-upgrade])") ||
+      (state.commentsSource?.matches("ytd-comments") ? state.commentsSource : null);
     state.commentsStatus.hidden = Boolean(comments?.querySelector("ytd-comments-header-renderer, ytd-comment-thread-renderer, ytd-message-renderer, #comment-entry"));
     sizeSidebar(state);
   }

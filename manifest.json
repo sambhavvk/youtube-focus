@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "YouTube Focus",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "A calmer YouTube layout with the title and recommendations below the player and details beside it.",
   "permissions": ["storage", "activeTab"],
   "host_permissions": ["https://www.youtube.com/*"],

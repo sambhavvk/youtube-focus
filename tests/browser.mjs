@@ -232,6 +232,78 @@ try {
   pass("expanded descriptions do not clip comments; native close and reopen stay synchronized");
   pass("watch-root replacement and newer engagement-panel comments are supported");
 
+  for (const video of ['engagement02', 'engagement03']) {
+    await js("window.startCommentsNavigation(arguments[0])", video);
+    await until("return document.getElementById('yf-comments-panel')?.hidden === true && !!document.querySelector('#yf-title h1')", "navigation did not reset comments");
+    await js("window.completeCommentsNavigation()");
+    await until(`return document.querySelector('#yf-comments-panel > [data-fixture-video="${video}"]') !== null`, "the new video comments renderer was ignored in favor of the previous renderer");
+    await driver.findElement(By.id("yf-comments-toggle")).click();
+    assert.ok((await js("return document.querySelector('#yf-comments-panel .comment p').textContent")).includes(video));
+    assert.equal(await js("return window.previousFixtureComments.isConnected"), false, "the retired renderer must not survive in the page");
+    assert.equal(await js("return document.querySelectorAll('[target-id=engagement-panel-comments-section]').length"), 1);
+  }
+  pass("repeated recommendation navigation opens the new video's comments, not a retained old renderer");
+
+  await driver.switchTo().window(popupTab);
+  await driver.findElement(By.id("enabled")).click();
+  await driver.switchTo().window(watchTab);
+  await until("return !document.querySelector('.yf-active')", "disable after comment replacement failed");
+  assert.ok((await js("return document.querySelector('#panels .comment p').textContent")).includes('engagement03'));
+  await driver.switchTo().window(popupTab);
+  await driver.findElement(By.id("enabled")).click();
+  await driver.switchTo().window(watchTab);
+  await until("return !!document.querySelector('#yf-comments-toggle')", "re-enable after comment replacement failed");
+  await driver.findElement(By.id("yf-comments-toggle")).click();
+  assert.ok((await js("return document.querySelector('#yf-comments-panel .comment p').textContent")).includes('engagement03'));
+  assert.equal(await js("return document.querySelectorAll('[target-id=engagement-panel-comments-section]').length"), 1);
+  pass("disable/re-enable restores and reuses only the current video's comments");
+
+  await js("window.startCommentsNavigation('history04', {events:false})");
+  await until("return document.getElementById('yf-comments-panel').hidden", "URL-only navigation did not reset comments");
+  await js("window.completeCommentsNavigation()");
+  await until("return !!document.querySelector('#yf-comments-panel > [data-fixture-video=history04]')", "URL-only navigation retained the old renderer");
+  await driver.findElement(By.id("yf-comments-toggle")).click();
+  assert.ok((await js("return document.querySelector('#yf-comments-panel .comment p').textContent")).includes('history04'));
+  pass("history/URL-only navigation also switches to the current comments source");
+
+  await js("window.startCommentsNavigation('history04', {events:false}); window.completeCommentsNavigation()");
+  await until("return !window.previousFixtureComments.isConnected", "an open panel ignored a same-video renderer replacement");
+  assert.equal(await js("return document.getElementById('yf-comments-panel').hidden"), false);
+  assert.equal(await js("return document.querySelectorAll('[target-id=engagement-panel-comments-section]').length"), 1);
+  pass("a renderer replacement while open preserves the toggle without duplicating comments");
+
+  await js("window.startCommentsNavigation('disabled05', {disabled:true})");
+  await until("return document.getElementById('yf-comments-panel')?.hidden === true", "disabled-comments navigation did not reset the panel");
+  await js("window.completeCommentsNavigation()");
+  await until("return !!document.querySelector('#yf-comments-panel > [data-fixture-video=disabled05]')", "disabled comments did not replace the previous thread");
+  await driver.findElement(By.id("yf-comments-toggle")).click();
+  assert.equal(await js("return document.querySelectorAll('#yf-comments-panel .comment').length"), 0);
+  assert.ok((await js("return document.querySelector('#yf-comments-panel ytd-message-renderer').textContent")).includes('disabled05'));
+  pass("videos with disabled comments display the native message instead of an older thread");
+
+  await js("document.querySelector('#panels').replaceChildren()");
+  await until("return document.querySelector('#yf-comments-panel > [target-id]') === null", "an orphaned comments source was retained after its native slot was cleared");
+  assert.equal(await js("return document.querySelector('#yf-comments-panel .yf-comments-status').hidden"), false);
+  pass("a cleared native slot retires its orphaned renderer instead of resurrecting stale comments");
+
+  await js("window.replaceWatch()");
+  await until("return !!document.querySelector('#yf-comments-panel > ytd-comments')", "classic comments fixture did not initialize");
+  for (const video of ['classic06', 'classic07']) {
+    await driver.findElement(By.id("yf-comments-toggle")).click();
+    await js("window.startCommentsNavigation(arguments[0], {engagement:false})", video);
+    await until("return document.getElementById('yf-comments-panel')?.hidden === true", "classic comments did not close on navigation");
+    await js("window.completeCommentsNavigation()");
+    await until(`return !!document.querySelector('#yf-comments-panel > ytd-comments[data-fixture-video="${video}"]')`, "classic comments retained the previous video's source");
+    assert.equal(await js("return window.previousFixtureComments.isConnected"), false);
+    assert.equal(await js("return document.querySelectorAll('ytd-comments:not([disable-upgrade])').length"), 1);
+    assert.ok((await js("return document.querySelector('#yf-comments-panel .comment p').textContent")).includes(video));
+  }
+  pass("classic comments also switch correctly across repeated navigation");
+
+  await js("window.replaceWatch(); window.useEngagementComments()");
+  await until("return !!document.querySelector('#yf-comments-panel ytd-comments[engagement-panel]')", "engagement comments fixture did not reset");
+  await driver.findElement(By.id("yf-comments-toggle")).click();
+
   await driver.manage().window().setRect({ width: 960, height: 1000 });
   const narrow = await js("return ['primary','yf-title','secondary','yf-recommendations'].map(id=>document.getElementById(id).getBoundingClientRect().toJSON())");
   assert.ok(narrow[1].top >= narrow[0].bottom);
